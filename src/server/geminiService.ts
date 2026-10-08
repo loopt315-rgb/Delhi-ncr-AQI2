@@ -61,28 +61,35 @@ function getOfficialMeaning(aqi: number): { level: string; icon: string; meaning
 
 /**
  * Executes a Gemini API call with fallback across supported model tiers.
- * Prioritizes low-latency models with active quota headroom (gemini-3.1-flash-lite, gemini-3.6-flash).
+ * Prioritizes low-latency models with active quota headroom (gemini-3.8-flash, gemini-flash-latest).
+ * Enforces strict per-call and overall execution deadlines with timer cleanup for serverless safety.
  */
 async function callGeminiWithFallback<T>(
   fn: (modelName: string) => Promise<T>,
-  timeoutMs: number = 7000
+  timeoutMs: number = 4000
 ): Promise<T | null> {
   const models = [
-    "gemini-3.1-flash-lite",
-    "gemini-3.6-flash",
-    "gemini-3-flash-preview",
+    "gemini-3.8-flash",
     "gemini-flash-latest"
   ];
 
+  const overallDeadline = Date.now() + 5500;
+
   for (const model of models) {
+    const remainingTime = overallDeadline - Date.now();
+    if (remainingTime <= 500) break;
+
+    const callTimeout = Math.min(timeoutMs, remainingTime);
+    let timerId: NodeJS.Timeout | null = null;
     try {
-      const timeoutPromise = new Promise<never>((_, reject) =>
-        setTimeout(() => reject(new Error("call_timeout")), timeoutMs)
-      );
+      const timeoutPromise = new Promise<never>((_, reject) => {
+        timerId = setTimeout(() => reject(new Error("call_timeout")), callTimeout);
+      });
       const result = await Promise.race([fn(model), timeoutPromise]);
+      if (timerId) clearTimeout(timerId);
       return result;
     } catch {
-      // Quietly try next model in fallback cascade
+      if (timerId) clearTimeout(timerId);
       continue;
     }
   }

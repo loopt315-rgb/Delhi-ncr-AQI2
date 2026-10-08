@@ -210,13 +210,14 @@ router.get("/ai/summary", async (req, res) => {
 
 // Conversational Pollution Assistant endpoint
 router.post("/chat", async (req, res) => {
-  const { location = "delhi", message, history = [], language = "en" } = req.body;
-  if (!message || typeof message !== "string") {
-    res.status(400).json({ error: "Message string is required" });
-    return;
-  }
-
   try {
+    const body = req.body || {};
+    const { location = "delhi", message, history = [], language = "en" } = body;
+    if (!message || typeof message !== "string") {
+      res.status(400).json({ error: "Message string is required" });
+      return;
+    }
+
     const response = await handleAIChat(
       location as LocationId,
       message,
@@ -225,7 +226,16 @@ router.post("/chat", async (req, res) => {
     );
     res.json(response);
   } catch (err) {
-    res.status(500).json({ error: "Chat processing error", details: String(err) });
+    console.error("[AirSense Chat Error]:", err);
+    try {
+      const body = req.body || {};
+      const loc = (body.location as LocationId) || "delhi";
+      const lang = (body.language as SupportedLanguage) || "en";
+      const fallback = await handleAIChat(loc, body.message || "air quality update", [], lang);
+      res.json(fallback);
+    } catch {
+      res.status(500).json({ error: "Chat processing error", details: String(err) });
+    }
   }
 });
 
