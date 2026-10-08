@@ -1,0 +1,8 @@
+{
+  "name": "Remix Remix AirSense NCR ppt",
+  "description": "Predict pollution, track regional smoke plumes, forecast air quality across Delhi NCR, and monitor convective cloudbursts as an Android-ready application.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

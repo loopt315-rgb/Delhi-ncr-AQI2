@@ -1,0 +1,107 @@
+{
+  "timestamp": "2026-09-13T10:09:22.820390Z",
+  "totalHotspots": 9,
+  "totalFireRadiativePowerMw": 437.1,
+  "meanFrpMw": 48.57,
+  "hotspots": [
+    {
+      "id": "firms-calibrated-1",
+      "lat": 31.45,
+      "lon": 74.92,
+      "state": "Punjab",
+      "district": "Tarn Taran",
+      "frpMw": 62.4,
+      "confidence": 88,
+      "satellite": "VIIRS",
+      "detectedTime": "2026-09-13 08:30 UTC"
+    },
+    {
+      "id": "firms-calibrated-2",
+      "lat": 31.63,
+      "lon": 74.87,
+      "state": "Punjab",
+      "district": "Amritsar",
+      "frpMw": 48.1,
+      "confidence": 88,
+      "satellite": "VIIRS",
+      "detectedTime": "2026-09-13 08:30 UTC"
+    },
+    {
+      "id": "firms-calibrated-3",
+      "lat": 30.91,
+      "lon": 74.61,
+      "state": "Punjab",
+      "district": "Firozpur",
+      "frpMw": 78.5,
+      "confidence": 88,
+      "satellite": "VIIRS",
+      "detectedTime": "2026-09-13 08:30 UTC"
+    },
+    {
+      "id": "firms-calibrated-4",
+      "lat": 30.24,
+      "lon": 75.84,
+      "state": "Punjab",
+      "district": "Sangrur",
+      "frpMw": 85.2,
+      "confidence": 88,
+      "satellite": "VIIRS",
+      "detectedTime": "2026-09-13 08:30 UTC"
+    },
+    {
+      "id": "firms-calibrated-5",
+      "lat": 30.34,
+      "lon": 76.38,
+      "state": "Punjab",
+      "district": "Patiala",
+      "frpMw": 41.0,
+      "confidence": 88,
+      "satellite": "VIIRS",
+      "detectedTime": "2026-09-13 08:30 UTC"
+    },
+    {
+      "id": "firms-calibrated-6",
+      "lat": 29.8,
+      "lon": 76.4,
+      "state": "Haryana",
+      "district": "Kaithal",
+      "frpMw": 35.6,
+      "confidence": 88,
+      "satellite": "VIIRS",
+      "detectedTime": "2026-09-13 08:30 UTC"
+    },
+    {
+      "id": "firms-calibrated-7",
+      "lat": 29.96,
+      "lon": 76.88,
+      "state": "Haryana",
+      "district": "Kurukshetra",
+      "frpMw": 29.4,
+      "confidence": 88,
+      "satellite": "VIIRS",
+      "detectedTime": "2026-09-13 08:30 UTC"
+    },
+    {
+      "id": "firms-calibrated-8",
+      "lat": 29.53,
+      "lon": 75.03,
+      "state": "Haryana",
+      "district": "Sirsa",
+      "frpMw": 32.1,
+      "confidence": 88,
+      "satellite": "VIIRS",
+      "detectedTime": "2026-09-13 08:30 UTC"
+    },
+    {
+      "id": "firms-calibrated-9",
+      "lat": 29.15,
+      "lon": 75.72,
+      "state": "Haryana",
+      "district": "Hisar",
+      "frpMw": 24.8,
+      "confidence": 88,
+      "satellite": "VIIRS",
+      "detectedTime": "2026-09-13 08:30 UTC"
+    }
+  ]
+}

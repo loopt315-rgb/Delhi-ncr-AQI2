@@ -1,0 +1,201 @@
+{
+  "timestamp": "2026-09-13T10:09:22.866589Z",
+  "totalStationsEvaluated": 10,
+  "passingCount": 9,
+  "flaggedCount": 1,
+  "compliancePercentage": 90.0,
+  "stations": [
+    {
+      "stationId": "st-1",
+      "stationName": "Anand Vihar",
+      "city": "Delhi",
+      "timestamp": "2026-09-13T10:09:22.866429Z",
+      "pm25Raw": 310.0,
+      "pm10Raw": 440.0,
+      "o3Raw": 28.0,
+      "qcFlags": {
+        "rangePlausible": true,
+        "sensorPersistenceOk": true,
+        "rateOfChangeOk": true,
+        "ratioPlausible": true
+      },
+      "overallQC": "PASSED",
+      "failureReasons": [],
+      "pm25Validated": 310.0,
+      "pm10Validated": 440.0
+    },
+    {
+      "stationId": "st-wazirpur",
+      "stationName": "Wazirpur",
+      "city": "Delhi",
+      "timestamp": "2026-09-13T10:09:22.866451Z",
+      "pm25Raw": 325.0,
+      "pm10Raw": 465.0,
+      "o3Raw": 22.0,
+      "qcFlags": {
+        "rangePlausible": true,
+        "sensorPersistenceOk": true,
+        "rateOfChangeOk": true,
+        "ratioPlausible": true
+      },
+      "overallQC": "PASSED",
+      "failureReasons": [],
+      "pm25Validated": 325.0,
+      "pm10Validated": 465.0
+    },
+    {
+      "stationId": "st-bawana",
+      "stationName": "Bawana",
+      "city": "Delhi",
+      "timestamp": "2026-09-13T10:09:22.866457Z",
+      "pm25Raw": 320.0,
+      "pm10Raw": 460.0,
+      "o3Raw": 18.0,
+      "qcFlags": {
+        "rangePlausible": true,
+        "sensorPersistenceOk": true,
+        "rateOfChangeOk": true,
+        "ratioPlausible": true
+      },
+      "overallQC": "PASSED",
+      "failureReasons": [],
+      "pm25Validated": 320.0,
+      "pm10Validated": 460.0
+    },
+    {
+      "stationId": "st-2",
+      "stationName": "Punjabi Bagh",
+      "city": "Delhi",
+      "timestamp": "2026-09-13T10:09:22.866462Z",
+      "pm25Raw": 285.0,
+      "pm10Raw": 395.0,
+      "o3Raw": 34.0,
+      "qcFlags": {
+        "rangePlausible": true,
+        "sensorPersistenceOk": true,
+        "rateOfChangeOk": true,
+        "ratioPlausible": true
+      },
+      "overallQC": "PASSED",
+      "failureReasons": [],
+      "pm25Validated": 285.0,
+      "pm10Validated": 395.0
+    },
+    {
+      "stationId": "st-4",
+      "stationName": "Mandir Marg",
+      "city": "Delhi",
+      "timestamp": "2026-09-13T10:09:22.866466Z",
+      "pm25Raw": 270.0,
+      "pm10Raw": 380.0,
+      "o3Raw": 42.0,
+      "qcFlags": {
+        "rangePlausible": true,
+        "sensorPersistenceOk": true,
+        "rateOfChangeOk": true,
+        "ratioPlausible": true
+      },
+      "overallQC": "PASSED",
+      "failureReasons": [],
+      "pm25Validated": 270.0,
+      "pm10Validated": 380.0
+    },
+    {
+      "stationId": "st-6",
+      "stationName": "Sector 62 Noida",
+      "city": "Noida",
+      "timestamp": "2026-09-13T10:09:22.866480Z",
+      "pm25Raw": 288.0,
+      "pm10Raw": 398.0,
+      "o3Raw": 30.0,
+      "qcFlags": {
+        "rangePlausible": true,
+        "sensorPersistenceOk": true,
+        "rateOfChangeOk": true,
+        "ratioPlausible": true
+      },
+      "overallQC": "PASSED",
+      "failureReasons": [],
+      "pm25Validated": 288.0,
+      "pm10Validated": 398.0
+    },
+    {
+      "stationId": "st-8",
+      "stationName": "Vikas Sadan Gurugram",
+      "city": "Gurugram",
+      "timestamp": "2026-09-13T10:09:22.866487Z",
+      "pm25Raw": 272.0,
+      "pm10Raw": 385.0,
+      "o3Raw": 38.0,
+      "qcFlags": {
+        "rangePlausible": true,
+        "sensorPersistenceOk": true,
+        "rateOfChangeOk": true,
+        "ratioPlausible": true
+      },
+      "overallQC": "PASSED",
+      "failureReasons": [],
+      "pm25Validated": 272.0,
+      "pm10Validated": 385.0
+    },
+    {
+      "stationId": "st-loni",
+      "stationName": "Loni Ghaziabad",
+      "city": "Ghaziabad",
+      "timestamp": "2026-09-13T10:09:22.866566Z",
+      "pm25Raw": 330.0,
+      "pm10Raw": 470.0,
+      "o3Raw": 19.0,
+      "qcFlags": {
+        "rangePlausible": true,
+        "sensorPersistenceOk": true,
+        "rateOfChangeOk": true,
+        "ratioPlausible": true
+      },
+      "overallQC": "PASSED",
+      "failureReasons": [],
+      "pm25Validated": 330.0,
+      "pm10Validated": 470.0
+    },
+    {
+      "stationId": "st-13",
+      "stationName": "NIT Faridabad",
+      "city": "Faridabad",
+      "timestamp": "2026-09-13T10:09:22.866571Z",
+      "pm25Raw": 269.0,
+      "pm10Raw": 382.0,
+      "o3Raw": 35.0,
+      "qcFlags": {
+        "rangePlausible": true,
+        "sensorPersistenceOk": true,
+        "rateOfChangeOk": true,
+        "ratioPlausible": true
+      },
+      "overallQC": "PASSED",
+      "failureReasons": [],
+      "pm25Validated": 269.0,
+      "pm10Validated": 382.0
+    },
+    {
+      "stationId": "st-test-spike",
+      "stationName": "Test Hardware Spike",
+      "city": "Delhi",
+      "timestamp": "2026-09-13T10:09:22.866583Z",
+      "pm25Raw": 780.0,
+      "pm10Raw": 420.0,
+      "o3Raw": 40.0,
+      "qcFlags": {
+        "rangePlausible": true,
+        "sensorPersistenceOk": true,
+        "rateOfChangeOk": true,
+        "ratioPlausible": false
+      },
+      "overallQC": "FLAGGED_INVERTED",
+      "failureReasons": [
+        "Inverted particulate ratio: PM2.5 (780.0) > PM10 (420.0)"
+      ],
+      "pm25Validated": 344.4,
+      "pm10Validated": 420.0
+    }
+  ]
+}
