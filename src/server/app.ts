@@ -33,6 +33,20 @@ import { getCloudburstPrediction } from "./cloudburstService";
 
 export const app = express();
 
+// Disable ETags to prevent HTTP 304 Not Modified responses on dynamic telemetry APIs
+app.set("etag", false);
+
+// CORS and Cache-Control headers ensuring fresh payloads on Vercel deployments
+app.use((_req, res, next) => {
+  res.set("Access-Control-Allow-Origin", "*");
+  res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+  res.set("Access-Control-Allow-Headers", "Content-Type, Authorization");
+  res.set("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.set("Pragma", "no-cache");
+  res.set("Expires", "0");
+  next();
+});
+
 app.use(express.json());
 
 const router = express.Router();
@@ -61,10 +75,13 @@ router.get("/locations", (_req, res) => {
 router.get("/stations", async (_req, res) => {
   try {
     const stations = await getNCRStationsAsync();
-    res.json(stations);
+    if (Array.isArray(stations) && stations.length > 0) {
+      return res.json(stations);
+    }
   } catch {
-    res.json(NCR_STATIONS);
+    // fallback
   }
+  res.json(NCR_STATIONS);
 });
 
 // Current AQI endpoint (with live priority)
@@ -72,10 +89,13 @@ router.get("/aq/current", async (req, res) => {
   const loc = (req.query.location as LocationId) || "delhi";
   try {
     const data = await getCurrentAQIAsync(loc);
-    res.json(data);
+    if (data && typeof data.aqi === "number" && !isNaN(data.aqi) && data.pollutants) {
+      return res.json(data);
+    }
   } catch {
-    res.json(getCurrentAQI(loc));
+    // fallback
   }
+  res.json(getCurrentAQI(loc));
 });
 
 // 72-Hour AQI Forecast endpoint
@@ -83,10 +103,13 @@ router.get("/aq/forecast", async (req, res) => {
   const loc = (req.query.location as LocationId) || "delhi";
   try {
     const data = await get72HourForecastAsync(loc);
-    res.json(data);
+    if (Array.isArray(data) && data.length > 0 && typeof data[0]?.aqi === "number" && !isNaN(data[0].aqi)) {
+      return res.json(data);
+    }
   } catch {
-    res.json(get72HourForecast(loc));
+    // fallback
   }
+  res.json(get72HourForecast(loc));
 });
 
 // Why is AQI Changing endpoint
@@ -212,7 +235,7 @@ router.get("/ai/summary", async (req, res) => {
 router.post("/chat", async (req, res) => {
   try {
     const body = req.body || {};
-    const { location = "delhi", message, history = [], language = "en" } = body;
+    const { location = "delhi", message, history = [], language = "en", liveTelemetry } = body;
     if (!message || typeof message !== "string") {
       res.status(400).json({ error: "Message string is required" });
       return;
@@ -222,7 +245,8 @@ router.post("/chat", async (req, res) => {
       location as LocationId,
       message,
       Array.isArray(history) ? history : [],
-      language as SupportedLanguage
+      language as SupportedLanguage,
+      liveTelemetry
     );
     res.json(response);
   } catch (err) {
@@ -231,7 +255,7 @@ router.post("/chat", async (req, res) => {
       const body = req.body || {};
       const loc = (body.location as LocationId) || "delhi";
       const lang = (body.language as SupportedLanguage) || "en";
-      const fallback = await handleAIChat(loc, body.message || "air quality update", [], lang);
+      const fallback = await handleAIChat(loc, body.message || "air quality update", [], lang, body.liveTelemetry);
       res.json(fallback);
     } catch {
       res.status(500).json({ error: "Chat processing error", details: String(err) });

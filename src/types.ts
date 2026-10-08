@@ -237,6 +237,17 @@ export interface ChatMessage {
   isStreaming?: boolean;
 }
 
+export interface LiveTelemetryPayload {
+  currentAQI?: CurrentAQIResponse;
+  weather?: WeatherData;
+  forecast?: ForecastHourPoint[];
+  stations?: NCRStation[];
+  fires?: FireSummary;
+  plume?: PlumePrediction;
+  sources?: SourceContributionData;
+  health?: HealthRiskAdvice;
+}
+
 export interface DataSourceStatus {
   id: string;
   name: string;

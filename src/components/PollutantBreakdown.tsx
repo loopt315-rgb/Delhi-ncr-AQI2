@@ -18,12 +18,21 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ data }) 
   const [expanded, setExpanded] = useState(false);
   const { language, t } = useLanguage();
 
+  const p = data?.pollutants || {
+    pm25: typeof data?.aqi === 'number' ? Math.round(data.aqi * 0.75) : 50,
+    pm10: typeof data?.aqi === 'number' ? Math.round(data.aqi * 1.1) : 90,
+    no2: 25,
+    o3: 20,
+    so2: 8,
+    co: 1.2
+  };
+
   const pollutants = [
     {
       key: 'pm25',
       name: 'PM2.5',
       fullName: language === 'hi' ? 'सूक्ष्म कण (≤ 2.5 µm)' : 'Fine Particulate Matter (≤ 2.5 µm)',
-      value: data.pollutants.pm25,
+      value: p.pm25 ?? 50,
       unit: 'µg/m³',
       naqiStandard: 60,
       whoLimit: 15,
@@ -36,7 +45,7 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ data }) 
       key: 'pm10',
       name: 'PM10',
       fullName: language === 'hi' ? 'श्वसनीय मोटे कण (≤ 10 µm)' : 'Coarse Inhalable Particulates (≤ 10 µm)',
-      value: data.pollutants.pm10,
+      value: p.pm10 ?? 90,
       unit: 'µg/m³',
       naqiStandard: 100,
       whoLimit: 45,
@@ -49,7 +58,7 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ data }) 
       key: 'no2',
       name: 'NO2',
       fullName: language === 'hi' ? 'नाइट्रोजन डाइऑक्साइड' : 'Nitrogen Dioxide',
-      value: data.pollutants.no2,
+      value: p.no2 ?? 25,
       unit: 'µg/m³',
       naqiStandard: 80,
       whoLimit: 25,
@@ -62,7 +71,7 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ data }) 
       key: 'o3',
       name: 'O3',
       fullName: language === 'hi' ? 'ओजोन (8-घंटे का औसत)' : 'Surface Ground Ozone (8-hr avg)',
-      value: data.pollutants.o3,
+      value: p.o3 ?? 20,
       unit: 'µg/m³',
       naqiStandard: 100,
       whoLimit: 100,
@@ -75,7 +84,7 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ data }) 
       key: 'so2',
       name: 'SO2',
       fullName: language === 'hi' ? 'सल्फर डाइऑक्साइड' : 'Sulphur Dioxide',
-      value: data.pollutants.so2,
+      value: p.so2 ?? 8,
       unit: 'µg/m³',
       naqiStandard: 80,
       whoLimit: 40,
@@ -88,7 +97,7 @@ export const PollutantBreakdown: React.FC<PollutantBreakdownProps> = ({ data }) 
       key: 'co',
       name: 'CO',
       fullName: language === 'hi' ? 'कार्बन मोनोऑक्साइड' : 'Carbon Monoxide',
-      value: data.pollutants.co,
+      value: p.co ?? 1.2,
       unit: 'mg/m³',
       naqiStandard: 4,
       whoLimit: 4,

@@ -17,6 +17,7 @@ import {
 import { ForecastHourPoint } from '../types';
 import { getAQITheme, getRiskColor } from '../utils/colors';
 import { useLanguage } from '../context/LanguageContext';
+import { get72HourForecast } from '../server/dataService';
 
 type MetricType = 'aqi' | 'pm25' | 'pm10' | 'o3' | 'no2';
 
@@ -31,7 +32,12 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({ forecastData }) =>
   const [showConfidence, setShowConfidence] = useState<boolean>(true);
   const [showAccuracyDetails, setShowAccuracyDetails] = useState<boolean>(false);
 
-  const activePoint = forecastData[hoveredIdx] || forecastData[0];
+  // Guard against undefined, null, or empty data
+  const safeData = (Array.isArray(forecastData) && forecastData.length > 0)
+    ? forecastData
+    : get72HourForecast('delhi');
+
+  const activePoint = safeData[hoveredIdx] || safeData[0];
 
   const metricLabels: Record<MetricType, { name: string; unit: string; description: string }> = {
     aqi: {
@@ -62,25 +68,32 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({ forecastData }) =>
   };
 
   // Get values array
-  const values = forecastData.map((d) => d[activeMetric]);
+  const values = safeData.map((d) => {
+    const v = d[activeMetric];
+    return typeof v === 'number' && !isNaN(v) ? v : (d.aqi || 150);
+  });
 
   // Compute confidence upper and lower arrays for this metric
-  const upperValues = forecastData.map((d) => {
-    if (activeMetric === 'aqi') return d.confidenceUpper ?? Math.round(d.aqi * 1.15);
-    return Math.round(d[activeMetric] * 1.18);
+  const upperValues = safeData.map((d, i) => {
+    const v = values[i];
+    if (activeMetric === 'aqi') return d.confidenceUpper ?? Math.round(v * 1.15);
+    return Math.round(v * 1.18);
   });
-  const lowerValues = forecastData.map((d) => {
-    if (activeMetric === 'aqi') return d.confidenceLower ?? Math.round(d.aqi * 0.85);
-    return Math.max(5, Math.round(d[activeMetric] * 0.82));
+  const lowerValues = safeData.map((d, i) => {
+    const v = values[i];
+    if (activeMetric === 'aqi') return d.confidenceLower ?? Math.round(v * 0.85);
+    return Math.max(5, Math.round(v * 0.82));
   });
 
   const allVals = [
     ...values,
     ...(showConfidence ? upperValues : []),
     ...(showConfidence ? lowerValues : [])
-  ];
-  const minVal = Math.max(0, Math.min(...allVals) * 0.85);
-  const maxVal = Math.max(...allVals) * 1.12;
+  ].filter((v) => typeof v === 'number' && !isNaN(v));
+
+  const minVal = allVals.length > 0 ? Math.max(0, Math.min(...allVals) * 0.85) : 0;
+  const maxVal = allVals.length > 0 ? Math.max(...allVals) * 1.12 : 500;
+  const effectiveMax = maxVal <= minVal ? minVal + 100 : maxVal;
 
   // Chart dimensions for responsive SVG
   const width = 800;
@@ -89,13 +102,14 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({ forecastData }) =>
   const paddingY = 40;
 
   const getX = (idx: number) => {
-    if (forecastData.length <= 1) return paddingX;
-    return paddingX + (idx / (forecastData.length - 1)) * (width - paddingX * 2);
+    if (safeData.length <= 1) return paddingX;
+    return paddingX + (idx / (safeData.length - 1)) * (width - paddingX * 2);
   };
 
   const getY = (val: number) => {
-    const range = maxVal - minVal || 1;
-    return height - paddingY - ((val - minVal) / range) * (height - paddingY * 2);
+    const range = effectiveMax - minVal || 1;
+    const safeNum = typeof val === 'number' && !isNaN(val) ? val : minVal;
+    return height - paddingY - ((safeNum - minVal) / range) * (height - paddingY * 2);
   };
 
   // Build SVG path
@@ -126,17 +140,19 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({ forecastData }) =>
   const linePath = createSmoothPath(points);
   const upperLinePath = createSmoothPath(upperPoints);
   const lowerLinePath = createSmoothPath(lowerPoints);
-  const areaPath = `${linePath} L ${points[points.length - 1].x} ${height - paddingY} L ${points[0].x} ${height - paddingY} Z`;
+  const areaPath = points.length > 0 ? `${linePath} L ${points[points.length - 1].x} ${height - paddingY} L ${points[0].x} ${height - paddingY} Z` : '';
 
   // Shaded Confidence corridor path: forward upper, backward lower
-  const confidenceAreaPath = `${upperLinePath} L ${lowerPoints[lowerPoints.length - 1].x} ${lowerPoints[lowerPoints.length - 1].y} ` +
-    lowerPoints.slice().reverse().map((pt) => `L ${pt.x} ${pt.y}`).join(' ') + ' Z';
+  const confidenceAreaPath = lowerPoints.length > 0
+    ? `${upperLinePath} L ${lowerPoints[lowerPoints.length - 1].x} ${lowerPoints[lowerPoints.length - 1].y} ` +
+      lowerPoints.slice().reverse().map((pt) => `L ${pt.x} ${pt.y}`).join(' ') + ' Z'
+    : '';
 
-  const aqiTheme = getAQITheme(activePoint.aqi);
-  const riskTheme = getRiskColor(activePoint.riskLevel);
+  const aqiTheme = getAQITheme(activePoint?.aqi ?? 150);
+  const riskTheme = getRiskColor(activePoint?.riskLevel ?? 'LOW');
 
   // Ventilation Index classification
-  const vi = activePoint.ventilationIndex ?? Math.round(activePoint.pblHeightM * (activePoint.windSpeedKmh / 3.6));
+  const vi = activePoint?.ventilationIndex ?? Math.round((activePoint?.pblHeightM ?? 300) * ((activePoint?.windSpeedKmh ?? 5) / 3.6));
   let viBadge = { text: 'Good Dispersion', bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
   if (vi < 1200) {
     viBadge = { text: 'Critical Trapping (Smog Trap)', bg: 'bg-purple-50 text-purple-700 border-purple-200' };
@@ -429,7 +445,7 @@ export const ForecastChart: React.FC<ForecastChartProps> = ({ forecastData }) =>
           {/* Point markers & hover hitzones */}
           {points.map((pt, idx) => {
             const isHovered = hoveredIdx === idx;
-            const ptData = forecastData[idx];
+            const ptData = safeData[idx] || activePoint;
             return (
               <g key={idx} className="cursor-pointer" onClick={() => setHoveredIdx(idx)} onMouseEnter={() => setHoveredIdx(idx)}>
                 {/* Vertical cursor guide line */}

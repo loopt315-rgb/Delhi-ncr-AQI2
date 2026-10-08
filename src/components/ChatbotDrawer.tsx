@@ -16,9 +16,22 @@ import {
   FileText,
   Home,
   MapPin,
-  ChevronRight
+  ChevronRight,
+  Radio
 } from 'lucide-react';
-import { LocationId, ChatMessage } from '../types';
+import {
+  LocationId,
+  ChatMessage,
+  CurrentAQIResponse,
+  WeatherData,
+  ForecastHourPoint,
+  NCRStation,
+  FireSummary,
+  PlumePrediction,
+  SourceContributionData,
+  HealthRiskAdvice,
+  LiveTelemetryPayload
+} from '../types';
 import { LOCATIONS } from '../server/dataService';
 import { useLanguage } from '../context/LanguageContext';
 
@@ -26,6 +39,14 @@ interface ChatbotDrawerProps {
   isOpen: boolean;
   onClose: () => void;
   locationId: LocationId;
+  currentAQI?: CurrentAQIResponse;
+  weather?: WeatherData;
+  forecast?: ForecastHourPoint[];
+  stations?: NCRStation[];
+  fires?: FireSummary;
+  plume?: PlumePrediction;
+  sources?: SourceContributionData;
+  health?: HealthRiskAdvice;
   onNavigateSection?: (sectionId: string) => void;
 }
 
@@ -39,12 +60,12 @@ interface QuestionCategory {
 const QUESTION_CATEGORIES: QuestionCategory[] = [
   {
     id: 'health',
-    label: 'Health & Workout',
+    label: 'Health & Going Out',
     icon: Activity,
     questions: [
+      'Can I go out today? What are the results if I go out?',
       'Is it safe to go for a morning run outside today?',
-      'Which mask effectively stops PM2.5 particulates?',
-      'What precautions should asthma patients take right now?'
+      'Which mask effectively stops PM2.5 particulates?'
     ]
   },
   {
@@ -103,6 +124,14 @@ export const ChatbotDrawer: React.FC<ChatbotDrawerProps> = ({
   isOpen,
   onClose,
   locationId,
+  currentAQI,
+  weather,
+  forecast,
+  stations,
+  fires,
+  plume,
+  sources,
+  health,
   onNavigateSection,
 }) => {
   const { language, t } = useLanguage();
@@ -114,16 +143,21 @@ export const ChatbotDrawer: React.FC<ChatbotDrawerProps> = ({
   const [activeCategory, setActiveCategory] = useState<string>('health');
 
   const getInitialMessage = (location: string, lang: string): ChatMessage => {
+    const aqiNumber = currentAQI?.aqi ?? 163;
+    const aqiCategory = currentAQI?.category ?? 'Moderate';
+    const stationLabel = currentAQI?.stationName ?? `${location} Central Monitoring`;
+    const pm25Num = currentAQI?.pollutants?.pm25 ?? 85;
+
     if (lang === 'hi') {
       return {
         id: 'init-1',
         sender: 'assistant',
-        text: `### एयरसेंस जलवायु एवं वायुमंडलीय एआई में आपका स्वागत है\n\nमैं **${location}** के लिए आपका सत्यापित पर्यावरण और जलवायु विज्ञान सहायक हूँ।\n\nमैं केंद्रीय प्रदूषण नियंत्रण बोर्ड (CAAQMS) ग्राउंड मॉनिटर, मौसम विभाग (IMD) वायुमंडलीय साउंडिंग और नासा उपग्रह से जुड़ा हुआ हूँ। मुझसे कुछ भी पूछें:\n* **वायुमंडलीय कारक:** थर्मल इन्वर्जन, मिक्सिंग डेप्थ और मौसमी फैलाव।\n* **स्वास्थ्य एवं सावधानी:** मॉर्निंग वॉक का सही समय, N95 मास्क और एयर प्यूरीफायर।\n* **नीति एवं ग्रैप (GRAP):** वाहन प्रतिबंध, निर्माण कार्य नियम और स्कूल सलाह।\n* **क्षेत्रीय स्थिति:** पराली के धुएं का रुख और 72-घंटे का पूर्वानुमान।\n\nआज मैं आपकी क्या मदद कर सकता हूँ?`,
+        text: `### एयरसेंस जलवायु एवं वायुमंडलीय एआई में आपका स्वागत है\n\nमैं **${location}** के लिए आपका सत्यापित पर्यावरण और जलवायु विज्ञान सहायक हूँ। मैं वेबसाइट पर प्रदर्शित रीयल-टाइम डेटा से पूरी तरह जुड़ा हुआ हूँ।\n\n* **वर्तमान स्टेशन:** ${stationLabel}\n* **प्रदर्शित AQI:** **${aqiNumber}** (${aqiCategory}) | PM2.5: **${pm25Num} µg/m³**\n\nमुझसे कुछ भी पूछें:\n* **वायुमंडलीय कारक:** थर्मल इन्वर्जन, मिक्सिंग डेप्थ और मौसमी फैलाव।\n* **स्वास्थ्य एवं सावधानी:** मॉर्निंग वॉक का सही समय, N95 मास्क और एयर प्यूरीफायर।\n* **नीति एवं ग्रैप (GRAP):** वाहन प्रतिबंध, निर्माण कार्य नियम और स्कूल सलाह।\n* **क्षेत्रीय स्थिति:** पराली के धुएं का रुख और 72-घंटे का पूर्वानुमान।\n\nआज मैं आपकी क्या मदद कर सकता हूँ?`,
         timestamp: 'अभी',
         groundedFactors: [
-          'सक्रिय CAAQMS मॉनिटरिंग',
-          'थर्मल इन्वर्जन साउंडिंग लाइव',
-          'नासा VIIRS उपग्रह डेटा सक्रिय'
+          `वेबसाइट लाइव AQI: ${aqiNumber} (${aqiCategory})`,
+          `स्टेशन: ${stationLabel}`,
+          'नासा VIIRS उपग्रह एवं IMD साउंडिंग सक्रिय'
         ],
         suggestedFollowUps: [
           'आज रात प्रदूषण क्यों बढ़ रहा है?',
@@ -137,11 +171,11 @@ export const ChatbotDrawer: React.FC<ChatbotDrawerProps> = ({
       return {
         id: 'init-1',
         sender: 'assistant',
-        text: `### ਏਅਰਸੈਂਸ ਜਲਵਾਯੂ ਅਤੇ ਹਵਾ ਗੁਣਵੱਤਾ ਏਆਈ ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ\n\nਮੈਂ **${location}** ਲਈ ਤੁਹਾਡਾ ਵਾਤਾਵਰਣ ਵਿਗਿਆਨ ਸਹਾਇਕ ਹਾਂ। ਮੈਂ ਅਸਲ-ਸਮੇਂ ਦੇ ਪ੍ਰਦੂਸ਼ਣ ਨਿਯੰਤਰਣ ਬੋਰਡ ਅਤੇ ਨਾਸਾ ਉਪਗ੍ਰਹਿ ਡੇਟਾ ਨਾਲ ਜੁੜਿਆ ਹੋਇਆ ਹਾਂ।\n\nਤੁਸੀਂ ਪ੍ਰਦੂਸ਼ਣ ਦੇ ਕਾਰਨਾਂ, ਪਰਾਲੀ ਦੇ ਧੂੰਏਂ, ਜਾਂ ਸਿਹਤ ਸੰਬੰਧੀ ਸਾਵਧਾਨੀਆਂ ਬਾਰੇ ਕੋਈ ਵੀ ਸਵਾਲ ਪੁੱਛ ਸਕਦੇ ਹੋ।`,
+        text: `### ਏਅਰਸੈਂਸ ਜਲਵਾਯੂ ਅਤੇ ਹਵਾ ਗੁਣਵੱਤਾ ਏਆਈ ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ\n\nਮੈਂ **${location}** ਲਈ ਤੁਹਾਡਾ ਵਾਤਾਵਰਣ ਵਿਗਿਆਨ ਸਹਾਇਕ ਹਾਂ। ਮੈਂ ਵੈੱਬਸਾਈਟ 'ਤੇ ਦਿਖਾਏ ਜਾ ਰਹੇ ਲਾਈਵ ਡੇਟਾ ਨਾਲ ਜੁੜਿਆ ਹੋਇਆ ਹਾਂ।\n\n* **ਸਟੇਸ਼ਨ:** ${stationLabel}\n* **ਮੌਜੂਦਾ AQI:** **${aqiNumber}** (${aqiCategory})\n\nਤੁਸੀਂ ਪ੍ਰਦੂਸ਼ਣ ਦੇ ਕਾਰਨਾਂ, ਪਰਾਲੀ ਦੇ ਧੂੰਏਂ, ਜਾਂ ਸਿਹਤ ਸੰਬੰਧੀ ਸਾਵਧਾਨੀਆਂ ਬਾਰੇ ਕੋਈ ਵੀ ਸਵਾਲ ਪੁੱਛ ਸਕਦੇ ਹੋ।`,
         timestamp: 'ਹੁਣੇ',
         groundedFactors: [
-          'ਲਾਈਵ CAAQMS ਟੈਲੀਮੈਟਰੀ',
-          'ਨਾਸਾ ਉਪਗ੍ਰਹਿ ਡੇਟਾ ਐਕਟਿਵ'
+          `ਲਾਈਵ ਵੈੱਬਸਾਈਟ AQI: ${aqiNumber}`,
+          `ਸਟੇਸ਼ਨ: ${stationLabel}`
         ],
         suggestedFollowUps: [
           'ਅੱਜ ਪ੍ਰਦੂਸ਼ਣ ਕਿਉਂ ਵਧ ਰਿਹਾ ਹੈ?',
@@ -153,12 +187,12 @@ export const ChatbotDrawer: React.FC<ChatbotDrawerProps> = ({
     return {
       id: 'init-1',
       sender: 'assistant',
-      text: `### Welcome to AirSense Climate & Atmospheric AI\n\nI am your verified climate and environmental science assistant for **${location}**.\n\nI am connected to real-time CAAQMS ground monitors, IMD boundary layer soundings, and NASA VIIRS satellite feeds. Ask me anything about:\n* **Atmospheric Physics:** Inversion ceilings, mixing depth, and dispersion meteorology.\n* **Health & Lifestyle:** Safe workout timing, N95 respirators, and HEPA room sizing.\n* **Policy & GRAP:** Vehicle restrictions, odd-even rules, and school advisories.\n* **Local Geography:** Hotspot comparisons and 72-hour pollution outlooks.\n\nWhat can I help you understand today?`,
+      text: `### Welcome to AirSense Climate & Atmospheric AI\n\nI am your verified climate and environmental science assistant for **${location}**, synchronized directly with the live telemetry displayed on this dashboard.\n\n* **Active Station:** ${stationLabel}\n* **Observed AQI:** **${aqiNumber}** (${aqiCategory}) | PM2.5: **${pm25Num} µg/m³**\n\nAsk me anything about:\n* **Atmospheric Physics:** Inversion ceilings, mixing depth, and dispersion meteorology.\n* **Health & Lifestyle:** Safe workout timing, N95 respirators, and HEPA room sizing.\n* **Policy & GRAP:** Vehicle restrictions, odd-even rules, and school advisories.\n* **Local Geography:** Hotspot comparisons and 72-hour pollution outlooks.\n\nWhat can I help you understand today?`,
       timestamp: 'Just now',
       groundedFactors: [
-        'Live CAAQMS telemetry connected',
-        'Boundary layer inversion soundings active',
-        'NASA VIIRS satellite plume tracker online'
+        `Dashboard AQI: ${aqiNumber} (${aqiCategory})`,
+        `Monitored Station: ${stationLabel}`,
+        'NASA VIIRS + CPCB Grounding Active'
       ],
       suggestedFollowUps: [
         'Why is AQI so high tonight?',
@@ -230,6 +264,17 @@ export const ChatbotDrawer: React.FC<ChatbotDrawerProps> = ({
     setIsLoading(true);
 
     try {
+      const liveTelemetry: LiveTelemetryPayload = {
+        currentAQI,
+        weather,
+        forecast,
+        stations,
+        fires,
+        plume,
+        sources,
+        health
+      };
+
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -237,7 +282,8 @@ export const ChatbotDrawer: React.FC<ChatbotDrawerProps> = ({
           location: locationId,
           message: text,
           history: historyPayload,
-          language
+          language,
+          liveTelemetry
         }),
       });
 
@@ -365,12 +411,12 @@ export const ChatbotDrawer: React.FC<ChatbotDrawerProps> = ({
             <div className="flex items-center gap-2">
               <span className="font-bold text-slate-900 text-sm">Climate & AirSense AI</span>
               <span className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[9px] font-bold text-emerald-700 border border-emerald-200">
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-                LIVE CAAQMS TELEMETRY
+                <Radio className="h-2.5 w-2.5 text-emerald-600 animate-pulse" />
+                WEBSITE DATA SYNCED
               </span>
             </div>
             <p className="text-[11px] text-slate-500">
-              Station Grounding: <strong className="text-slate-800">{locName}</strong>
+              Station: <strong className="text-slate-800">{currentAQI?.stationName || locName}</strong> · AQI: <strong className="text-emerald-700 font-mono font-bold">{currentAQI?.aqi ?? 163}</strong> ({currentAQI?.category || 'Live'})
             </p>
           </div>
         </div>

@@ -147,7 +147,7 @@ export const CoupledModelPipelineView: React.FC<CoupledModelPipelineViewProps> =
 
   const currentStatus = runningPipeline ? 'Running' : (cycleInfo?.status || 'Success');
 
-  const activePoint = forecast[hoveredIdx] || forecast[0];
+  const activePoint = forecast[hoveredIdx] || forecast[0] || {} as any;
 
   // SVG Chart Dimensions
   const chartHeight = 260;
@@ -155,12 +155,18 @@ export const CoupledModelPipelineView: React.FC<CoupledModelPipelineViewProps> =
   const paddingX = 40;
   const paddingY = 30;
 
-  const pointsCount = Math.max(1, forecast.length);
-  const maxVal = Math.max(...forecast.map(p => metricMode === 'pm25' ? Math.max(p.uncertaintyP90, p.rawWrfChemPm25) : Math.max(p.rawWrfChemO3, p.mlCorrectedO3)), 200);
+  const pointsCount = Math.max(2, forecast.length);
+  const maxVal = forecast.length > 0
+    ? Math.max(...forecast.map(p => metricMode === 'pm25' ? Math.max(p.uncertaintyP90 || 0, p.rawWrfChemPm25 || 0) : Math.max(p.rawWrfChemO3 || 0, p.mlCorrectedO3 || 0)), 200)
+    : 200;
   const minVal = 0;
 
-  const getX = (idx: number) => paddingX + (idx / (pointsCount - 1)) * (chartWidth - 2 * paddingX);
-  const getY = (val: number) => chartHeight - paddingY - ((val - minVal) / (maxVal - minVal)) * (chartHeight - 2 * paddingY);
+  const getX = (idx: number) => paddingX + (idx / Math.max(1, pointsCount - 1)) * (chartWidth - 2 * paddingX);
+  const getY = (val: number) => {
+    const safeV = typeof val === 'number' && !isNaN(val) ? val : minVal;
+    const range = Math.max(1, maxVal - minVal);
+    return chartHeight - paddingY - ((safeV - minVal) / range) * (chartHeight - 2 * paddingY);
+  };
 
   // Path generators
   const rawPath = forecast.map((p, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(metricMode === 'pm25' ? p.rawWrfChemPm25 : p.rawWrfChemO3)}`).join(' ');

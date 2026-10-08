@@ -1,5 +1,17 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { LocationId, ActiveNavTab, NCRStation } from './types';
+import {
+  LocationId,
+  ActiveNavTab,
+  NCRStation,
+  CurrentAQIResponse,
+  ForecastHourPoint,
+  WeatherData,
+  FireSummary,
+  PlumePrediction,
+  SourceContributionData,
+  HealthRiskAdvice,
+  PredictiveAlert
+} from './types';
 import {
   getCurrentAQI,
   get72HourForecast,
@@ -118,45 +130,97 @@ export default function App() {
     }
   }, []);
 
-  // Fetch all endpoints
+  // Fetch all endpoints with validation and cache-busting
   const loadData = useCallback(async (loc: LocationId, showSpinner = true) => {
     if (showSpinner) setIsRefreshing(true);
 
+    const safeFetchJson = async <T,>(url: string, validator: (data: any) => boolean): Promise<T | null> => {
+      try {
+        const separator = url.includes('?') ? '&' : '?';
+        const cacheBustingUrl = `${url}${separator}_t=${Date.now()}`;
+        const res = await fetch(cacheBustingUrl, {
+          cache: 'no-store',
+          headers: {
+            'Accept': 'application/json',
+            'Cache-Control': 'no-cache, no-store'
+          }
+        });
+        if (!res.ok) return null;
+        const json = await res.json();
+        if (json && validator(json)) {
+          return json as T;
+        }
+        return null;
+      } catch {
+        return null;
+      }
+    };
+
     try {
       const [
-        aqiRes,
-        stationsRes,
-        forecastRes,
-        factorsRes,
-        weatherRes,
-        firesRes,
-        plumeRes,
-        sourcesRes,
-        healthRes,
-        alertsRes
-      ] = await Promise.allSettled([
-        fetch(`/api/aq/current?location=${loc}`).then((r) => r.json()),
-        fetch('/api/stations').then((r) => r.json()),
-        fetch(`/api/aq/forecast?location=${loc}`).then((r) => r.json()),
-        fetch(`/api/aq/factors?location=${loc}`).then((r) => r.json()),
-        fetch(`/api/weather/current?location=${loc}`).then((r) => r.json()),
-        fetch('/api/fires').then((r) => r.json()),
-        fetch(`/api/plume?location=${loc}`).then((r) => r.json()),
-        fetch(`/api/sources?location=${loc}`).then((r) => r.json()),
-        fetch(`/api/health-risk?location=${loc}`).then((r) => r.json()),
-        fetch(`/api/alerts?location=${loc}`).then((r) => r.json()),
+        aqiData,
+        stationsData,
+        forecastData,
+        factorsDataRes,
+        weatherData,
+        firesData,
+        plumeData,
+        sourcesData,
+        healthData,
+        alertsData
+      ] = await Promise.all([
+        safeFetchJson<CurrentAQIResponse>(
+          `/api/aq/current?location=${loc}`,
+          (d) => typeof d.aqi === 'number' && !isNaN(d.aqi) && d.pollutants && typeof d.pollutants.pm25 === 'number'
+        ),
+        safeFetchJson<NCRStation[]>(
+          '/api/stations',
+          (d) => Array.isArray(d) && d.length > 0
+        ),
+        safeFetchJson<ForecastHourPoint[]>(
+          `/api/aq/forecast?location=${loc}`,
+          (d) => Array.isArray(d) && d.length > 0 && typeof d[0]?.aqi === 'number'
+        ),
+        safeFetchJson<any>(
+          `/api/aq/factors?location=${loc}`,
+          (d) => Array.isArray(d?.factors)
+        ),
+        safeFetchJson<WeatherData>(
+          `/api/weather/current?location=${loc}`,
+          (d) => typeof d?.temperatureC === 'number'
+        ),
+        safeFetchJson<FireSummary>(
+          '/api/fires',
+          (d) => typeof d?.totalCount === 'number'
+        ),
+        safeFetchJson<PlumePrediction>(
+          `/api/plume?location=${loc}`,
+          (d) => typeof d?.plumeRisk === 'string'
+        ),
+        safeFetchJson<SourceContributionData>(
+          `/api/sources?location=${loc}`,
+          (d) => Array.isArray(d?.sources)
+        ),
+        safeFetchJson<HealthRiskAdvice>(
+          `/api/health-risk?location=${loc}`,
+          (d) => Boolean(d?.summary || d?.generalAdvice)
+        ),
+        safeFetchJson<PredictiveAlert[]>(
+          `/api/alerts?location=${loc}`,
+          (d) => Array.isArray(d)
+        )
       ]);
 
-      if (aqiRes.status === 'fulfilled') setCurrentAQI(aqiRes.value);
-      if (stationsRes.status === 'fulfilled' && Array.isArray(stationsRes.value)) setStations(stationsRes.value);
-      if (forecastRes.status === 'fulfilled') setForecast(forecastRes.value);
-      if (factorsRes.status === 'fulfilled') setFactorsData(factorsRes.value);
-      if (weatherRes.status === 'fulfilled') setWeather(weatherRes.value);
-      if (firesRes.status === 'fulfilled') setFires(firesRes.value);
-      if (plumeRes.status === 'fulfilled') setPlume(plumeRes.value);
-      if (sourcesRes.status === 'fulfilled') setSources(sourcesRes.value);
-      if (healthRes.status === 'fulfilled') setHealth(healthRes.value);
-      if (alertsRes.status === 'fulfilled') setAlerts(alertsRes.value);
+      if (aqiData) setCurrentAQI(aqiData);
+      if (stationsData) setStations(stationsData);
+      if (forecastData) setForecast(forecastData);
+      if (factorsDataRes) setFactorsData(factorsDataRes);
+      if (weatherData) setWeather(weatherData);
+      if (firesData) setFires(firesData);
+      if (plumeData) setPlume(plumeData);
+      if (sourcesData) setSources(sourcesData);
+      if (healthData) setHealth(healthData);
+      if (alertsData) setAlerts(alertsData);
     } catch (err) {
       console.info('API fetch notice, using local calibrated models:', err);
     } finally {
@@ -166,7 +230,13 @@ export default function App() {
     // Load AI summary
     setIsLoadingAI(true);
     try {
-      const aiRes = await fetch(`/api/ai/summary?location=${loc}&lang=${language}`);
+      const aiRes = await fetch(`/api/ai/summary?location=${loc}&lang=${language}&_t=${Date.now()}`, {
+        cache: 'no-store',
+        headers: {
+          'Accept': 'application/json',
+          'Cache-Control': 'no-cache, no-store'
+        }
+      });
       if (aiRes.ok) {
         const aiData = await aiRes.json();
         setAiSummary(aiData);
@@ -709,6 +779,14 @@ export default function App() {
         isOpen={isChatOpen}
         onClose={() => setIsChatOpen(false)}
         locationId={currentLocation}
+        currentAQI={currentAQI}
+        weather={weather}
+        forecast={forecast}
+        stations={stations}
+        fires={fires}
+        plume={plume}
+        sources={sources}
+        health={health}
         onNavigateSection={(id) => {
           const clean = id.replace('#', '').toLowerCase();
           if (clean === 'why-changing-card' || clean === 'why-changing' || clean === 'causes' || clean === 'sources') {
